@@ -1,3 +1,4 @@
+// stripe-webhook.controller.ts
 import {
   Controller,
   Post,
@@ -30,11 +31,13 @@ export class StripeWebhookController {
     let event: Stripe.Event;
 
     try {
+      // ✅ Constrói o evento a partir do raw body
       event = this.stripe.webhooks.constructEvent(
         req.body,
         signature,
         webhookSecret,
       );
+      console.log(`Webhook verified: ${event.type}`);
     } catch (err) {
       console.error('Webhook signature verification failed:', err.message);
       return res
@@ -42,22 +45,37 @@ export class StripeWebhookController {
         .send(`Webhook Error: ${err.message}`);
     }
 
-    // 🎯 Tratar evento de pagamento concluído
-    if (
-      event.type === 'checkout.session.completed' ||
-      event.type === 'payment_intent.succeeded'
-    ) {
-      const session: Stripe.Checkout.Session = event.data
-        .object as Stripe.Checkout.Session;
+    // 🎯 Eventos de pagamento que nos interessam
+    switch (event.type) {
+      case 'checkout.session.completed':
+      case 'payment_intent.succeeded': {
+        const session: Stripe.Checkout.Session = event.data
+          .object as Stripe.Checkout.Session;
+        const siteId = session.metadata?.siteId;
 
-      const siteId = session.metadata?.siteId;
-      if (siteId) {
-        try {
-          await this.createSiteService.markAsPaid(siteId);
-        } catch (err) {
-          console.error('Erro ao atualizar site para paid:', err);
+        if (siteId) {
+          try {
+            await this.createSiteService.markAsPaid(siteId);
+            console.log(`✅ Site ${siteId} marcado como pago`);
+          } catch (err) {
+            console.error('Erro ao atualizar site para paid:', err);
+          }
         }
+        break;
       }
+
+      case 'product.created':
+      case 'price.created':
+      case 'charge.succeeded':
+      case 'charge.updated':
+      case 'payment_intent.created': {
+        // Só log para monitoramento
+        console.log(`Event received: ${event.type}`);
+        break;
+      }
+
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
     }
 
     res.status(HttpStatus.OK).json({ received: true });
