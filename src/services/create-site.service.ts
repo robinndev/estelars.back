@@ -39,6 +39,7 @@ export class CreateSiteService {
           plan_price: Number(createSiteDto.plan_price),
           state: 'draft',
           photos: photos.length ? { create: photos } : undefined,
+          email_address: createSiteDto.email,
         },
         include: { photos: true },
       });

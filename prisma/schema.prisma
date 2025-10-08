@@ -14,20 +14,21 @@ enum SiteState {
 }
 
 model Site {
-  id          String    @id @default(cuid())
-  couple_name String
-  date        DateTime
-  time        String
-  message     String
-  color       String
-  music       String?
-  plan_id     String
-  plan_price  Float
-  state       SiteState @default(draft)
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
-  photos      Photo[]
-  videos      Video[]
+  id            String    @id @default(cuid())
+  couple_name   String
+  date          DateTime
+  time          String
+  message       String
+  color         String
+  music         String?
+  plan_id       String
+  plan_price    Float
+  state         SiteState @default(draft)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  photos        Photo[]
+  videos        Video[]
+  email_address String
 }
 
 model Photo {

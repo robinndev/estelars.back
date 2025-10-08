@@ -25,4 +25,7 @@ export class CreateSiteDto {
 
   @IsNumber()
   plan_price: number;
+
+  @IsString()
+  email: string;
 }
