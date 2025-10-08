@@ -13,10 +13,14 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { CreateSiteDto } from 'src/dtos/create-site';
 import { CreateSiteService } from 'src/services/create-site.service';
+import { StripeService } from 'src/services/stripe.service';
 
 @Controller('site')
 export class CreateSiteController {
-  constructor(private readonly createSiteService: CreateSiteService) {}
+  constructor(
+    private readonly createSiteService: CreateSiteService,
+    private readonly stripeService: StripeService,
+  ) {}
 
   @Post()
   @UseInterceptors(FilesInterceptor('photos', 10, { storage: memoryStorage() }))
@@ -25,10 +29,23 @@ export class CreateSiteController {
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     try {
-      console.log(createSiteDto);
+      // 1️⃣ Cria site em draft
+      const site = await this.createSiteService.createDraft(
+        createSiteDto,
+        files,
+      );
 
-      return await this.createSiteService.create(createSiteDto, files);
+      // 2️⃣ Cria Stripe Checkout Session
+      const { url: checkoutUrl } =
+        await this.stripeService.createCheckoutSession(
+          site.plan_price,
+          site.id,
+        );
+
+      // 3️⃣ Retorna site + URL do Checkout pro frontend
+      return { site, checkoutUrl };
     } catch (error) {
+      console.error('CreateSiteController Error:', error);
       if (error.code === 'P2002' || error.code === 'P2016') {
         throw new BadRequestException('Dados duplicados ou inválidos.');
       }

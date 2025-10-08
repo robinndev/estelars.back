@@ -11,34 +11,30 @@ export class StripeService {
     });
   }
 
-  // Criar um Payment Intent
-  async createPaymentIntent(amount: number, currency = 'usd') {
-    const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // em centavos
-      currency,
-    });
-    return paymentIntent;
-  }
-
+  // Cria Checkout Session
   async createCheckoutSession(amount: number, siteId: string) {
     const session = await this.stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'boleto'],
+      mode: 'payment',
       line_items: [
         {
           price_data: {
-            currency: 'usd',
-            product_data: { name: `Site do casal ${siteId}` },
-            unit_amount: Math.round(amount * 100),
+            currency: 'brl',
+            product_data: {
+              name: `Site ${siteId}`,
+            },
+            unit_amount: Math.round(amount * 100), // em centavos
           },
           quantity: 1,
         },
       ],
-      mode: 'payment',
-      success_url: `https://seusite.com/sucesso?siteId=${siteId}`,
-      cancel_url: `https://seusite.com/cancelado?siteId=${siteId}`,
-      metadata: { siteId }, // útil pra depois atualizar status
+      metadata: {
+        siteId, // pra usar no webhook
+      },
+      success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/cancel`,
     });
 
-    return { url: session.url }; // frontend redireciona para aqui
+    return { url: session.url };
   }
 }
