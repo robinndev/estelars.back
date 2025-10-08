@@ -56,4 +56,11 @@ export class CreateSiteService {
       include: { photos: true, videos: true },
     });
   }
+
+  async markAsPaid(siteId: string) {
+    return this.prisma.site.update({
+      where: { id: siteId },
+      data: { state: 'paid' },
+    });
+  }
 }
