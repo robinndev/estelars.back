@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SiteState {
+  draft
+  paid
+  canceled
+}
+
+model Site {
+  id          String    @id @default(cuid())
+  couple_name String
+  date        DateTime
+  time        String
+  message     String
+  color       String
+  music       String?
+  plan_id     String
+  plan_price  Float
+  state       SiteState @default(draft)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  photos      Photo[]
+  videos      Video[]
+}
+
+model Photo {
+  id      String @id @default(cuid())
+  url     String
+  file_id String
+  site    Site   @relation(fields: [site_id], references: [id])
+  site_id String
+}
+
+model Video {
+  id      String @id @default(cuid())
+  url     String
+  file_id String
+  site    Site   @relation(fields: [site_id], references: [id])
+  site_id String
+}
