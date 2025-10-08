@@ -1,18 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { CreateSiteDto } from 'src/dtos/create-site';
-import { Prisma } from '@prisma/client';
 import { SupabaseService } from './supabase.service';
+import { StripeService } from './stripe.service';
 
 @Injectable()
 export class CreateSiteService {
   constructor(
     private prisma: PrismaService,
     private supabaseService: SupabaseService,
+    private stripeService: StripeService, // ✅ injetado
   ) {}
 
   async create(createSiteDto: CreateSiteDto, files: Express.Multer.File[]) {
     try {
+      // 1️⃣ Upload das fotos no Supabase
       const photos = files?.length
         ? await Promise.all(
             files.map(async (file) => {
@@ -22,6 +24,7 @@ export class CreateSiteService {
           )
         : [];
 
+      // 2️⃣ Criação do site no Prisma
       const site = await this.prisma.site.create({
         data: {
           couple_name: createSiteDto.couple_name,
@@ -37,7 +40,14 @@ export class CreateSiteService {
         include: { photos: true },
       });
 
-      return site;
+      // 3️⃣ Criação do PaymentIntent no Stripe
+      const paymentIntent = await this.stripeService.createPaymentIntent(
+        site.plan_price,
+        'usd', // moeda, ajuste conforme necessidade
+      );
+
+      // 4️⃣ Retornar site + paymentIntent
+      return { site, paymentIntent };
     } catch (error) {
       console.error('CreateSiteService Error:', error);
       throw error;
