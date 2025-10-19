@@ -15,6 +15,7 @@ enum SiteState {
 
 model Site {
   id            String    @id @default(cuid())
+  public_key    String    @unique
   couple_name   String
   date          DateTime
   time          String

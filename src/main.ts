@@ -14,6 +14,7 @@ async function bootstrap() {
   app.use('/stripe-webhook', bodyParser.raw({ type: 'application/json' }));
 
   await app.listen(process.env.PORT ?? 3002);
+  console.log('⚡️[server]: Server is running at', process.env.PORT ?? 3002);
   console.log(
     `🚀 Application running on: http://localhost:${process.env.PORT ?? 3002}`,
   );
