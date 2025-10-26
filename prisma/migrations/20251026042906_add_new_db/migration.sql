@@ -4,6 +4,7 @@ CREATE TYPE "SiteState" AS ENUM ('draft', 'paid', 'canceled');
 -- CreateTable
 CREATE TABLE "Site" (
     "id" TEXT NOT NULL,
+    "public_key" TEXT NOT NULL,
     "couple_name" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
     "time" TEXT NOT NULL,
@@ -15,6 +16,7 @@ CREATE TABLE "Site" (
     "state" "SiteState" NOT NULL DEFAULT 'draft',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
+    "email_address" TEXT NOT NULL,
 
     CONSTRAINT "Site_pkey" PRIMARY KEY ("id")
 );
@@ -38,6 +40,9 @@ CREATE TABLE "Video" (
 
     CONSTRAINT "Video_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Site_public_key_key" ON "Site"("public_key");
 
 -- AddForeignKey
 ALTER TABLE "Photo" ADD CONSTRAINT "Photo_site_id_fkey" FOREIGN KEY ("site_id") REFERENCES "Site"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
